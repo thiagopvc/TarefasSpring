@@ -14,7 +14,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("tarefas")
@@ -34,8 +36,11 @@ public class TarefaResource {
 
     @GetMapping("{id}")
     public ResponseEntity<TarefaDTO> detalhe(@PathVariable Long id){
-        Tarefa tarefa = tarefaRepository.getOne(id);
-        return ResponseEntity.ok(new TarefaDTO(tarefa));
+        Optional<Tarefa> tarefa = tarefaRepository.findById(id);
+        return tarefa
+                .map(t -> ResponseEntity.ok(new TarefaDTO(t)))
+                .orElse(ResponseEntity.notFound().build());
+
     }
 
     @PostMapping
@@ -51,5 +56,36 @@ public class TarefaResource {
         return ResponseEntity
                 .created(uri)
                 .body(new TarefaDTO(tarefa));
+    }
+
+    @PutMapping("{id}")
+    @Transactional
+    public ResponseEntity<TarefaDTO> atualiza(
+        @PathVariable Long id,
+        @RequestBody @Valid Tarefa tarefaAtualizaa
+    ){
+        Optional<Tarefa> tarefa = tarefaRepository.findById(id);
+        return tarefa
+                .map(t -> {
+                    t.setDescricao(tarefaAtualizaa.getDescricao());
+                    t.setFeita(tarefaAtualizaa.getFeita());
+                    t.setDataLimite(tarefaAtualizaa.getDataLimite());
+                    t.setUltimaAtualizacao(LocalDate.now());
+                    tarefaRepository.save(t);
+                    return ResponseEntity.ok(new TarefaDTO(t));
+                })
+                    .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("{id}")
+    @Transactional
+    public ResponseEntity<?> remove(@PathVariable Long id){
+        Optional<Tarefa> tarefa = tarefaRepository.findById(id);
+        return tarefa
+                .map(t -> {
+                    tarefaRepository.deleteById(id);
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }
