@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class TarefaResource {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<TarefaDTO> salva(@RequestBody Tarefa tarefa, UriComponentsBuilder uriBuilder){
+    public ResponseEntity<TarefaDTO> salva(@RequestBody @Valid Tarefa tarefa, UriComponentsBuilder uriBuilder){
         tarefaRepository.save(tarefa);
 
         URI uri = uriBuilder
